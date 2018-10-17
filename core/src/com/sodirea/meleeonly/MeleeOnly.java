@@ -9,8 +9,8 @@ import com.sodirea.meleeonly.states.GameStateManager;
 import com.sodirea.meleeonly.states.PlayState;
 
 public class MeleeOnly extends ApplicationAdapter {
-	public static final int WIDTH = 800;
-	public static final int HEIGHT = 480;
+	public static final int WIDTH = 2400;
+	public static final int HEIGHT = 1440;
 	public static final String TITLE = "Melee Only";
 	private SpriteBatch sb;
 	private GameStateManager gsm;

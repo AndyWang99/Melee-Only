@@ -26,8 +26,8 @@ public class PlayState extends State {
 
     public PlayState(GameStateManager gsm) {
         super(gsm);
-        // cam.setToOrtho(false, MeleeOnly.WIDTH, MeleeOnly.HEIGHT);
-        cam.setToOrtho(false, 5000, 5000);
+        cam.setToOrtho(false, MeleeOnly.WIDTH, MeleeOnly.HEIGHT);
+        //cam.setToOrtho(false, 5000, 5000);
 
         map = new boolean[50][50];                                           // each pair of indices represent one unit in our game world
         int trueCount = 0;
@@ -81,6 +81,7 @@ public class PlayState extends State {
                 // only walls that are adjacent to floor (i.e. "true" in the map) will have a physics body
                 if (!map[i][j]) {
                     //sb.draw(wall, i*UNIT_DIM.x, j*UNIT_DIM.y);
+                    // TODO: the following conditional code is FOR GENERATING OUR WALLS' PHYSICS BODIES (move this code into generateMap())
                     // check if there is an adjacent floor (true in our map) to this wall (false in our map)
                     if (i > 0 && map[i-1][j]
                         || i < map.length-1 && map[i+1][j]
@@ -115,20 +116,21 @@ public class PlayState extends State {
         }
 
         // walk the Walker 1 index in its direction. if it hits a dead-end, change its direction
+        // a dead-end is 1 index before the bounds of the array. so [1 or map.length-2][1 or map.length-2]. we reserve the bounds of the array (0 and map.length-1) for walls
         void walk() {
-            if (pos.x + dir.x < 0) { // check if the walker will walk out of bounds.
+            if (pos.x + dir.x < 1) { // check if the walker will walk out of bounds.
                 dir.x = 0;                     // note that if it does, we don't want to simply reverse the direction (since it would be meaningless to re-walk the same path).
                 dir.y = -1;                    // so make it walk perpendicular
                 walk();                        // re-walk the Walker with the new direction
-            } else if (pos.x + dir.x > map.length-1) {
+            } else if (pos.x + dir.x > map.length-2) {
                 dir.x = 0;
                 dir.y = 1;
                 walk();
-            } else if (pos.y + dir.y < 0) {
+            } else if (pos.y + dir.y < 1) {
                 dir.y = 0;
                 dir.x = 1;
                 walk();
-            } else if (pos.y + dir.y > map[(int) pos.x].length-1) {
+            } else if (pos.y + dir.y > map[(int) pos.x].length-2) {
                 dir.y = 0;
                 dir.x = -1;
                 walk();
@@ -176,7 +178,9 @@ public class PlayState extends State {
         ArrayList<Walker> walkers = new ArrayList<Walker>();
         // get random x, y coordinate to start the walkers at
         Random rng = new Random();
-        Vector2 initialCoord = new Vector2(rng.nextInt(map.length), rng.nextInt(map.length));
+        Vector2 initialCoord = new Vector2(rng.nextInt(map.length-2)+1, rng.nextInt(map.length-2)+1);   // initial coordinate of where our walkers start. this is also the coordinate of where the player will spawn. chooses a coordinate anywhere on the map, except on the maps bounds; i.e. [1-map.length-2][1-map.length-2]
+        cam.position.x = initialCoord.x;
+        cam.position.y = initialCoord.y;
         map[(int) initialCoord.x][(int) initialCoord.y] = true;
         // init the list with 4 walkers: one for each direction
         walkers.add(new Walker(initialCoord, new Vector2(-1,0)));
@@ -192,7 +196,7 @@ public class PlayState extends State {
                 if (walkers.size() < MAX_WALKER_NUM) {
                     // try spawning a walker
                     if (rng.nextFloat() < WALKER_SPAWN_CHANCE) {
-                        Vector2 direction = generateNewDirection(); // gerenate a direction for the new walker
+                        Vector2 direction = generateNewDirection(); // generate a direction for the new walker
                         walkers.add(new Walker(walker.getPos(), direction));
                     }
                 }
