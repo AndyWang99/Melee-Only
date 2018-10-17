@@ -6,10 +6,11 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.sodirea.meleeonly.states.GameStateManager;
+import com.sodirea.meleeonly.states.PlayState;
 
 public class MeleeOnly extends ApplicationAdapter {
-	public static final int WIDTH = 480;
-	public static final int HEIGHT = 800;
+	public static final int WIDTH = 800;
+	public static final int HEIGHT = 480;
 	public static final String TITLE = "Melee Only";
 	private SpriteBatch sb;
 	private GameStateManager gsm;
@@ -19,7 +20,7 @@ public class MeleeOnly extends ApplicationAdapter {
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		sb = new SpriteBatch();
 		gsm = new GameStateManager();
-		// gsm.push(new PlayState(gsm));
+		gsm.push(new PlayState(gsm));
 	}
 
 	@Override
