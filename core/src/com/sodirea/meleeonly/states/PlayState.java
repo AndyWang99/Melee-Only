@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.sodirea.meleeonly.MeleeOnly;
+import com.sodirea.meleeonly.sprites.Player;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -18,11 +19,12 @@ public class PlayState extends State {
 
     public static final Vector2 MAP_DIM = new Vector2(5000, 5000);      // max dimensions of our game world in px. this means that map.length * UNIT_DIM = MAP_DIM always!!!!
     public static final Vector2 UNIT_DIM = new Vector2(100, 100);         // each unit is 50px x 50px, so our world is composed of 100 x 100 units
-    public static final int MIN_NUM_TILES = 400;
-    public static final int MAX_NUM_TILES = 700;
+    public static final int MIN_NUM_TILES = 300;
+    public static final int MAX_NUM_TILES = 500;
 
     private boolean[][] map;                                                  // if true, then that pair of indices is walkable. false means it is a wall
     private Texture wall;
+    private Player player;
 
     public PlayState(GameStateManager gsm) {
         super(gsm);
@@ -30,6 +32,7 @@ public class PlayState extends State {
         //cam.setToOrtho(false, 5000, 5000);
 
         map = new boolean[50][50];                                           // each pair of indices represent one unit in our game world
+        player = new Player();
         int trueCount = 0;
         while (trueCount < MIN_NUM_TILES || trueCount > MAX_NUM_TILES) {       // while the number of floors are less than min or greater than max, keep generating the map until we get something in between
             generateMap();
@@ -68,6 +71,11 @@ public class PlayState extends State {
     @Override
     public void update(float dt) {
         handleInput();
+        player.update(dt);
+
+        cam.position.x = player.getPosition().x;
+        cam.position.y = player.getPosition().y;
+        cam.update();
     }
 
     @Override
@@ -92,12 +100,14 @@ public class PlayState extends State {
                 }
             }
         }
+        player.render(sb);
         sb.end();
     }
 
     @Override
     public void dispose() {
         wall.dispose();
+        player.dispose();
     }
 
     // Walker class is used to help generate the map using the Drunkard Walk algorithm with multiple walkers
@@ -211,5 +221,10 @@ public class PlayState extends State {
             }
             // TODO: make a new physics body for all walls that are adjacent to floor
         }
+
+        player.setPosition(initialCoord.x * UNIT_DIM.x, initialCoord.y * UNIT_DIM.y);         // set coordinates of the player to the initial coordinate (which is guaranteed to be walkable)
+        cam.position.x = player.getPosition().x;
+        cam.position.y = player.getPosition().y;
+        cam.update();
     }
 }
