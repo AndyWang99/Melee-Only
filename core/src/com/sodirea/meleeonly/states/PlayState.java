@@ -5,10 +5,15 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -92,6 +97,38 @@ public class PlayState extends State {
             System.out.println(trueCount);
         }
         wall = new Texture("wall.png");
+
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                // if this pair of coordinates is false, then it is a wall. render it into our game world
+                // but if it is false, it does not necessarily mean it is a wall in the physics world;
+                // only walls that are adjacent to floor (i.e. "true" in the map) will have a physics body
+                if (!map[i][j]) {
+                    // check if there is an adjacent floor (true in our map) to this wall (false in our map)
+                    if (i > 0 && map[i-1][j]
+                            || i < map.length-1 && map[i+1][j]
+                            || j > 0 && map[i][j-1]
+                            || j < map[i].length-1 && map[i][j+1]) { // if there is, then add a physics body to our world for this wall
+                        BodyDef wallBodyDef;
+                        Body wallBody;
+                        PolygonShape wallBox;
+                        FixtureDef wallFixtureDef;
+                        Fixture wallFixture;
+                        wallBodyDef = new BodyDef();
+                        wallBodyDef.position.set((i * UNIT_DIM.x + wall.getWidth() / 2) * PIXELS_TO_METERS, (j * UNIT_DIM.y + wall.getHeight() / 2) * PIXELS_TO_METERS);
+                        wallBody = world.createBody(wallBodyDef);
+                        wallBox = new PolygonShape();
+                        wallBox.setAsBox(wall.getWidth() / 2 * PIXELS_TO_METERS, wall.getHeight() / 2 * PIXELS_TO_METERS);
+                        wallFixtureDef = new FixtureDef();
+                        wallFixtureDef.shape = wallBox;
+                        wallFixtureDef.density = 0.0f;
+                        wallFixtureDef.friction = 0.0f;
+                        wallFixture = wallBody.createFixture(wallFixtureDef);
+                    }
+                }
+            }
+        }
+
         Texture knob = new Texture("knob.png");
         Texture padbg = new Texture("padbg.png");
 
@@ -109,7 +146,7 @@ public class PlayState extends State {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 Vector2 knobCoord = new Vector2(((Touchpad) actor).getKnobPercentX(), ((Touchpad) actor).getKnobPercentY());
-                player.setPlayerLinearVelocity(knobCoord.x/PIXELS_TO_METERS, knobCoord.y/PIXELS_TO_METERS);
+                player.setPlayerLinearVelocity(knobCoord.x/PIXELS_TO_METERS/3, knobCoord.y/PIXELS_TO_METERS/3);
             }
         });
         stage.addActor(pad);
@@ -159,13 +196,23 @@ public class PlayState extends State {
                 // only walls that are adjacent to floor (i.e. "true" in the map) will have a physics body
                 if (!map[i][j]) {
                     //sb.draw(wall, i*UNIT_DIM.x, j*UNIT_DIM.y);
-                    // TODO: the following conditional code is FOR GENERATING OUR WALLS' PHYSICS BODIES (move this code into generateMap())
+                }
+            }
+        }
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                // if this pair of coordinates is false, then it is a wall. render it into our game world
+                // but if it is false, it does not necessarily mean it is a wall in the physics world;
+                // only walls that are adjacent to floor (i.e. "true" in the map) will have a physics body
+                if (!map[i][j]) {
+                    //sb.draw(wall, i*UNIT_DIM.x, j*UNIT_DIM.y);
                     // check if there is an adjacent floor (true in our map) to this wall (false in our map)
                     if (i > 0 && map[i-1][j]
-                        || i < map.length-1 && map[i+1][j]
-                        || j > 0 && map[i][j-1]
-                        || j < map[i].length-1 && map[i][j+1]) {
-                        sb.draw(wall, i*UNIT_DIM.x, j*UNIT_DIM.y); // if there is, then add a physics body to our world for this wall
+                            || i < map.length-1 && map[i+1][j]
+                            || j > 0 && map[i][j-1]
+                            || j < map[i].length-1 && map[i][j+1]) { // if there is, then add a physics body to our world for this wall
+
+                        sb.draw(wall, i*UNIT_DIM.x, j*UNIT_DIM.y);
                     }
                 }
             }
@@ -291,7 +338,6 @@ public class PlayState extends State {
                     walker.changeDir();
                 }
             }
-            // TODO: make a new physics body for all walls that are adjacent to floor
         }
 
         player.setPosition(initialCoord.x * UNIT_DIM.x, initialCoord.y * UNIT_DIM.y);         // set coordinates of the player to the initial coordinate (which is guaranteed to be walkable)

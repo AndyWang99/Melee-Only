@@ -34,7 +34,7 @@ public class Player {
         playerBodyDef.position.set((position.x+player.getWidth()/2) * PIXELS_TO_METERS, (position.y+player.getHeight()/2) * PIXELS_TO_METERS); // convert render coordinates to physics body coodinates
         playerBody = world.createBody(playerBodyDef);
         playerSquare = new PolygonShape();
-        playerSquare.setAsBox(player.getWidth()/2, player.getHeight()/2);
+        playerSquare.setAsBox((player.getWidth()/2)*PIXELS_TO_METERS, (player.getHeight()/2)*PIXELS_TO_METERS);
         playerFixtureDef = new FixtureDef();
         playerFixtureDef.shape = playerSquare;
         playerFixtureDef.density = 500f;
