@@ -47,6 +47,7 @@ public class PlayState extends State {
 
     private boolean[][] map;                                                  // if true, then that pair of indices is walkable. false means it is a wall
     private Texture wall;
+    private Texture floor;
     private Player player;
     private Stage stage;
     private Touchpad pad;
@@ -97,6 +98,7 @@ public class PlayState extends State {
             System.out.println(trueCount);
         }
         wall = new Texture("wall.png");
+        floor = new Texture("floor.png");
 
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
@@ -132,7 +134,7 @@ public class PlayState extends State {
         Texture knob = new Texture("knob.png");
         Texture padbg = new Texture("padbg.png");
 
-        stage = new Stage(new ScalingViewport(Scaling.fit, cam.viewportWidth, cam.viewportHeight));
+        stage = new Stage(new ScalingViewport(Scaling.fill, cam.viewportWidth, cam.viewportHeight));
         Skin skin = new Skin();
         skin.add("knob", knob);
         skin.add("background", padbg);
@@ -195,26 +197,20 @@ public class PlayState extends State {
                 // but if it is false, it does not necessarily mean it is a wall in the physics world;
                 // only walls that are adjacent to floor (i.e. "true" in the map) will have a physics body
                 if (!map[i][j]) {
-                    //sb.draw(wall, i*UNIT_DIM.x, j*UNIT_DIM.y);
+                    sb.draw(wall, i*UNIT_DIM.x, j*UNIT_DIM.y);
+                } else {
+                    sb.draw(floor, i*UNIT_DIM.x, j*UNIT_DIM.y); // else it is floor, so add texture for floor
                 }
             }
-        }
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                // if this pair of coordinates is false, then it is a wall. render it into our game world
-                // but if it is false, it does not necessarily mean it is a wall in the physics world;
-                // only walls that are adjacent to floor (i.e. "true" in the map) will have a physics body
-                if (!map[i][j]) {
-                    //sb.draw(wall, i*UNIT_DIM.x, j*UNIT_DIM.y);
-                    // check if there is an adjacent floor (true in our map) to this wall (false in our map)
-                    if (i > 0 && map[i-1][j]
-                            || i < map.length-1 && map[i+1][j]
-                            || j > 0 && map[i][j-1]
-                            || j < map[i].length-1 && map[i][j+1]) { // if there is, then add a physics body to our world for this wall
-
-                        sb.draw(wall, i*UNIT_DIM.x, j*UNIT_DIM.y);
-                    }
-                }
+            // everytime we iterate a row, add extra visual walls "outside" of the map
+            // (i.e. indexes less than 0 and greater than the map.length)
+            // so the player doesn't just peer into the void
+            // the i'th row will add walls for the i'th row and i'th column
+            for (int k = 1; k <= 7; k++) {
+                sb.draw(wall, i*UNIT_DIM.x, -k*UNIT_DIM.y);
+                sb.draw(wall, i*UNIT_DIM.x, (map[i].length+k)*UNIT_DIM.y);
+                sb.draw(wall, -k*UNIT_DIM.x, i*UNIT_DIM.y);
+                sb.draw(wall, (map.length+k)*UNIT_DIM.x, i*UNIT_DIM.y);
             }
         }
         player.render(sb);
