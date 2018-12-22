@@ -5,9 +5,16 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Manifold;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Scaling;
@@ -30,20 +37,47 @@ public class PlayState extends State {
     public static final Vector2 UNIT_DIM = new Vector2(150, 150);         // each unit is 50px x 50px, so our world is composed of 100 x 100 units
     public static final int MIN_NUM_TILES = 300;
     public static final int MAX_NUM_TILES = 500;
+    public static final float PIXELS_TO_METERS = 0.01f;
+    public static final float TIME_STEP = 1 / 300f;
 
     private boolean[][] map;                                                  // if true, then that pair of indices is walkable. false means it is a wall
     private Texture wall;
     private Player player;
     private Stage stage;
     private Touchpad pad;
+    private World world;
 
     public PlayState(GameStateManager gsm) {
         super(gsm);
+
+        world = new World(new Vector2(0, 0), true);
+        world.setContactListener(new ContactListener() {
+            @Override
+            public void beginContact(Contact contact) {
+
+            }
+
+            @Override
+            public void endContact(Contact contact) {
+
+            }
+
+            @Override
+            public void preSolve(Contact contact, Manifold oldManifold) {
+
+            }
+
+            @Override
+            public void postSolve(Contact contact, ContactImpulse impulse) {
+
+            }
+        });
+
         cam.setToOrtho(false, MeleeOnly.WIDTH, MeleeOnly.HEIGHT);
         //cam.setToOrtho(false, MAP_DIM.x, MAP_DIM.y);
 
         map = new boolean[50][50];                                           // each pair of indices represent one unit in our game world
-        player = new Player();
+        player = new Player(world);
         int trueCount = 0;
         while (trueCount < MIN_NUM_TILES || trueCount > MAX_NUM_TILES) {       // while the number of floors are less than min or greater than max, keep generating the map until we get something in between
             generateMap();
@@ -71,6 +105,13 @@ public class PlayState extends State {
         pad = new Touchpad(0.5f, style);
         pad.setBounds(stage.getWidth()/12, stage.getHeight()/6, padbg.getWidth(), padbg.getHeight());
         pad.setSize(padbg.getWidth(), padbg.getHeight());
+        pad.addListener(new ChangeListener() {              // listener for checking the coordinates of the touchpad
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                Vector2 knobCoord = new Vector2(((Touchpad) actor).getKnobPercentX(), ((Touchpad) actor).getKnobPercentY());
+                player.setPlayerLinearVelocity(knobCoord.x/PIXELS_TO_METERS, knobCoord.y/PIXELS_TO_METERS);
+            }
+        });
         stage.addActor(pad);
 
         Gdx.input.setInputProcessor(stage);
@@ -104,6 +145,7 @@ public class PlayState extends State {
         cam.position.y = player.getPosition().y;
         cam.update();
         stage.act();
+        world.step(TIME_STEP, 6, 2);
     }
 
     @Override
