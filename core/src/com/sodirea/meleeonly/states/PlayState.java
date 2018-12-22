@@ -3,7 +3,16 @@ package com.sodirea.meleeonly.states;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Scaling;
+import com.badlogic.gdx.utils.viewport.ScalingViewport;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.sodirea.meleeonly.MeleeOnly;
 import com.sodirea.meleeonly.sprites.Player;
 
@@ -17,19 +26,21 @@ import static com.sodirea.meleeonly.states.PlayState.Walker.WALKER_SPAWN_CHANCE;
 
 public class PlayState extends State {
 
-    public static final Vector2 MAP_DIM = new Vector2(5000, 5000);      // max dimensions of our game world in px. this means that map.length * UNIT_DIM = MAP_DIM always!!!!
-    public static final Vector2 UNIT_DIM = new Vector2(100, 100);         // each unit is 50px x 50px, so our world is composed of 100 x 100 units
+    public static final Vector2 MAP_DIM = new Vector2(7500, 7500);      // max dimensions of our game world in px. this means that map.length * UNIT_DIM = MAP_DIM always!!!!
+    public static final Vector2 UNIT_DIM = new Vector2(150, 150);         // each unit is 50px x 50px, so our world is composed of 100 x 100 units
     public static final int MIN_NUM_TILES = 300;
     public static final int MAX_NUM_TILES = 500;
 
     private boolean[][] map;                                                  // if true, then that pair of indices is walkable. false means it is a wall
     private Texture wall;
     private Player player;
+    private Stage stage;
+    private Touchpad pad;
 
     public PlayState(GameStateManager gsm) {
         super(gsm);
         cam.setToOrtho(false, MeleeOnly.WIDTH, MeleeOnly.HEIGHT);
-        //cam.setToOrtho(false, 5000, 5000);
+        //cam.setToOrtho(false, MAP_DIM.x, MAP_DIM.y);
 
         map = new boolean[50][50];                                           // each pair of indices represent one unit in our game world
         player = new Player();
@@ -47,11 +58,27 @@ public class PlayState extends State {
             System.out.println(trueCount);
         }
         wall = new Texture("wall.png");
+        Texture knob = new Texture("knob.png");
+        Texture padbg = new Texture("padbg.png");
+
+        stage = new Stage(new ScalingViewport(Scaling.fit, cam.viewportWidth, cam.viewportHeight));
+        Skin skin = new Skin();
+        skin.add("knob", knob);
+        skin.add("background", padbg);
+        Touchpad.TouchpadStyle style = new Touchpad.TouchpadStyle();
+        style.knob = skin.getDrawable("knob");
+        style.background = skin.getDrawable("background");
+        pad = new Touchpad(0.5f, style);
+        pad.setBounds(stage.getWidth()/12, stage.getHeight()/6, padbg.getWidth(), padbg.getHeight());
+        pad.setSize(padbg.getWidth(), padbg.getHeight());
+        stage.addActor(pad);
+
+        Gdx.input.setInputProcessor(stage);
     }
 
     @Override
     protected void handleInput() {
-        if (Gdx.input.justTouched()) {
+        /*if (Gdx.input.justTouched()) {
             int trueCount = 0;
             while (trueCount < MIN_NUM_TILES || trueCount > MAX_NUM_TILES) {    // while the number of floors are less than min or greater than max, keep generating the map until we get something in between
                 generateMap();
@@ -65,7 +92,7 @@ public class PlayState extends State {
                 }
                 System.out.println(trueCount);
             }
-        }
+        }*/
     }
 
     @Override
@@ -76,6 +103,7 @@ public class PlayState extends State {
         cam.position.x = player.getPosition().x;
         cam.position.y = player.getPosition().y;
         cam.update();
+        stage.act();
     }
 
     @Override
@@ -102,12 +130,14 @@ public class PlayState extends State {
         }
         player.render(sb);
         sb.end();
+        stage.draw();
     }
 
     @Override
     public void dispose() {
         wall.dispose();
         player.dispose();
+        stage.dispose();
     }
 
     // Walker class is used to help generate the map using the Drunkard Walk algorithm with multiple walkers
