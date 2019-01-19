@@ -20,7 +20,7 @@ public class Player {
 
     private BodyDef playerBodyDef;
     private Body playerBody;
-    private PolygonShape playerSquare;
+    private CircleShape playerCircle;
     private FixtureDef playerFixtureDef;
     private Fixture playerFixture;
 
@@ -33,10 +33,10 @@ public class Player {
         playerBodyDef.type = BodyDef.BodyType.DynamicBody;
         playerBodyDef.position.set((position.x+player.getWidth()/2) * PIXELS_TO_METERS, (position.y+player.getHeight()/2) * PIXELS_TO_METERS); // convert render coordinates to physics body coodinates
         playerBody = world.createBody(playerBodyDef);
-        playerSquare = new PolygonShape();
-        playerSquare.setAsBox((player.getWidth()/2)*PIXELS_TO_METERS, (player.getHeight()/2)*PIXELS_TO_METERS);
+        playerCircle = new CircleShape();
+        playerCircle.setRadius((player.getWidth()/2) * PIXELS_TO_METERS);
         playerFixtureDef = new FixtureDef();
-        playerFixtureDef.shape = playerSquare;
+        playerFixtureDef.shape = playerCircle;
         playerFixtureDef.density = 500f;
         playerFixtureDef.friction = 10f;
         playerFixture = playerBody.createFixture(playerFixtureDef);
@@ -56,12 +56,16 @@ public class Player {
         playerBody.setLinearVelocity(x, y);
     }
 
+    public void setAngle(float angle) {
+        playerBody.setTransform(playerBody.getWorldCenter(), angle);
+    }
+
     public void update(float dt) {
         position.set(playerBody.getPosition().x/PIXELS_TO_METERS-player.getWidth()/2, playerBody.getPosition().y/PIXELS_TO_METERS-player.getHeight()/2); // convert physics body coordinates back to render coordinates. this ensures that the rendering position is always in sync with the physics body's position
     }
 
     public void render(SpriteBatch sb) {
-        sb.draw(player, position.x, position.y);
+        sb.draw(player, position.x, position.y, player.getWidth()/2, player.getHeight()/2, player.getWidth(), player.getHeight(),1f, 1f, playerBody.getAngle(), 0, 0, player.getWidth(), player.getHeight(), false, false);
     }
 
     public void dispose() {

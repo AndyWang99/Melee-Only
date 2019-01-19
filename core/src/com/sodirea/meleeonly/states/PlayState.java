@@ -46,6 +46,7 @@ public class PlayState extends State {
     public static final float TIME_STEP = 1 / 300f;
 
     private boolean[][] map;                                                  // if true, then that pair of indices is walkable. false means it is a wall
+    private Texture catBg;
     private Texture wall;
     private Texture floor;
     private Player player;
@@ -97,6 +98,8 @@ public class PlayState extends State {
             }
             System.out.println(trueCount);
         }
+
+        catBg = new Texture("catbg.png");
         wall = new Texture("wall.png");
         floor = new Texture("floor.png");
 
@@ -148,7 +151,18 @@ public class PlayState extends State {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 Vector2 knobCoord = new Vector2(((Touchpad) actor).getKnobPercentX(), ((Touchpad) actor).getKnobPercentY());
+                // set their running direction based on the coordinate of the knob
                 player.setPlayerLinearVelocity(knobCoord.x/PIXELS_TO_METERS/3, knobCoord.y/PIXELS_TO_METERS/3);
+
+                // set their looking direction (i.e. player's angle) based on coordinates of the knob
+                if (knobCoord.x != 0 || knobCoord.y != 0) {
+                    System.out.println(knobCoord);
+                    float angle = (float) Math.atan(knobCoord.y/knobCoord.x);
+                    if (knobCoord.x < 0) {
+                        angle += (float) Math.PI;
+                    }
+                    player.setAngle(angle * (float) (180/Math.PI));
+                }
             }
         });
         stage.addActor(pad);
@@ -191,6 +205,7 @@ public class PlayState extends State {
     public void render(SpriteBatch sb) {
         sb.setProjectionMatrix(cam.combined);
         sb.begin();
+        sb.draw(catBg, cam.position.x-cam.viewportWidth/2, cam.position.y-cam.viewportHeight/2);
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
                 // if this pair of coordinates is false, then it is a wall. render it into our game world
@@ -202,7 +217,7 @@ public class PlayState extends State {
                     sb.draw(floor, i*UNIT_DIM.x, j*UNIT_DIM.y); // else it is floor, so add texture for floor
                 }
             }
-            // everytime we iterate a row, add extra visual walls "outside" of the map
+            /*// everytime we iterate a row, add extra visual walls "outside" of the map
             // (i.e. indexes less than 0 and greater than the map.length)
             // so the player doesn't just peer into the void
             // the i'th row will add walls for the i'th row and i'th column
@@ -211,7 +226,7 @@ public class PlayState extends State {
                 sb.draw(wall, i*UNIT_DIM.x, (map[i].length+k)*UNIT_DIM.y);
                 sb.draw(wall, -k*UNIT_DIM.x, i*UNIT_DIM.y);
                 sb.draw(wall, (map.length+k)*UNIT_DIM.x, i*UNIT_DIM.y);
-            }
+            }*/
         }
         player.render(sb);
         sb.end();
@@ -220,7 +235,9 @@ public class PlayState extends State {
 
     @Override
     public void dispose() {
+        catBg.dispose();
         wall.dispose();
+        floor.dispose();
         player.dispose();
         stage.dispose();
     }
