@@ -17,6 +17,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
@@ -52,6 +53,7 @@ public class PlayState extends State {
     private Player player;
     private Stage stage;
     private Touchpad pad;
+    private Button atkBtn;
     private World world;
 
     public PlayState(GameStateManager gsm) {
@@ -156,7 +158,6 @@ public class PlayState extends State {
 
                 // set their looking direction (i.e. player's angle) based on coordinates of the knob
                 if (knobCoord.x != 0 || knobCoord.y != 0) {
-                    System.out.println(knobCoord);
                     float angle = (float) Math.atan(knobCoord.y/knobCoord.x);
                     if (knobCoord.x < 0) {
                         angle += (float) Math.PI;
@@ -166,6 +167,23 @@ public class PlayState extends State {
             }
         });
         stage.addActor(pad);
+
+        Texture button = new Texture("button.png");
+        skin.add("button", button);
+        Button.ButtonStyle btnStyle = new Button.ButtonStyle();
+        btnStyle.up = skin.getDrawable("button");
+        btnStyle.down = skin.getDrawable("button");
+        btnStyle.checked = skin.getDrawable("button");
+        atkBtn = new Button(btnStyle);
+        atkBtn.setBounds(stage.getWidth()*10/12, stage.getHeight()/5, button.getWidth(), button.getHeight());
+        atkBtn.setSize(button.getWidth(), button.getHeight());
+        atkBtn.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                player.attack();
+            }
+        });
+        stage.addActor(atkBtn);
 
         Gdx.input.setInputProcessor(stage);
     }
