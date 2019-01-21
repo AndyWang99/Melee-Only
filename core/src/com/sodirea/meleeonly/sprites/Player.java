@@ -18,6 +18,8 @@ public class Player {
     private Texture player;
     private Vector2 position;
 
+    private int hp;
+
     private Texture attack;
     private Vector2 attackedSpot;
     private float attackedAngle;
@@ -61,6 +63,7 @@ public class Player {
         playerFixtureDef.shape = playerCircle;
         playerFixtureDef.density = 500f;
         playerFixtureDef.friction = 10f;
+        playerFixtureDef.restitution = 0f;
         playerFixture = playerBody.createFixture(playerFixtureDef);
     }
 

@@ -27,6 +27,8 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.sodirea.meleeonly.MeleeOnly;
+import com.sodirea.meleeonly.sprites.Enemy;
+import com.sodirea.meleeonly.sprites.Fox;
 import com.sodirea.meleeonly.sprites.Player;
 
 import java.util.ArrayList;
@@ -51,6 +53,9 @@ public class PlayState extends State {
     private Texture wall;
     private Texture floor;
     private Player player;
+
+    private ArrayList<Enemy> enemies;
+
     private Stage stage;
     private Touchpad pad;
     private Button atkBtn;
@@ -136,6 +141,9 @@ public class PlayState extends State {
             }
         }
 
+        enemies = new ArrayList<Enemy>();
+        enemies.add(new Fox(world, new Vector2(player.getPosition().x+100, player.getPosition().y+100)));
+
         Texture knob = new Texture("knob.png");
         Texture padbg = new Texture("padbg.png");
 
@@ -212,6 +220,10 @@ public class PlayState extends State {
         handleInput();
         player.update(dt);
 
+        for(Enemy enemy : enemies) {
+            enemy.update(dt);
+        }
+
         cam.position.x = player.getPosition().x;
         cam.position.y = player.getPosition().y;
         cam.update();
@@ -246,6 +258,9 @@ public class PlayState extends State {
                 sb.draw(wall, (map.length+k)*UNIT_DIM.x, i*UNIT_DIM.y);
             }*/
         }
+        for(Enemy enemy : enemies) {
+            enemy.render(sb);
+        }
         player.render(sb);
         sb.end();
         stage.draw();
@@ -257,6 +272,9 @@ public class PlayState extends State {
         wall.dispose();
         floor.dispose();
         player.dispose();
+        for(Enemy enemy : enemies) {
+            enemy.dispose();
+        }
         stage.dispose();
     }
 
