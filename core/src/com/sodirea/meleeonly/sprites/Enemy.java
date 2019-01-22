@@ -26,6 +26,9 @@ public abstract class Enemy {
     private FixtureDef enemyFixtureDef;
     private Fixture enemyFixture;
 
+    private boolean isAggro;
+    private float detectionRange;
+
     protected Enemy(World world, Texture enemy, Vector2 position) {
         this.enemy = enemy;
         this.position = position;
@@ -39,10 +42,12 @@ public abstract class Enemy {
         enemyCircle.setRadius((enemy.getWidth()/2) * PIXELS_TO_METERS);
         enemyFixtureDef = new FixtureDef();
         enemyFixtureDef.shape = enemyCircle;
-        enemyFixtureDef.density = 500f;
+        enemyFixtureDef.density = 5000f;
         enemyFixtureDef.friction = 10f;
         enemyFixtureDef.restitution = 0f;
         enemyFixture = enemyBody.createFixture(enemyFixtureDef);
+
+        isAggro = false;
     }
 
     public Texture getTexture() {
@@ -73,10 +78,30 @@ public abstract class Enemy {
         return enemyBody;
     }
 
+    public abstract void setNormalSteering();
+
+    public abstract void setAggroSteering();
+
+    public boolean isAggro() {
+        return isAggro;
+    }
+
+    public void flipAggro() {
+        isAggro = !isAggro;
+    }
+
+    public float getDetectionRange() {
+        return detectionRange;
+    }
+
+    public void setDetectionRange(float detectionRange) {
+        this.detectionRange = detectionRange;
+    }
+
     public abstract void update(float dt);
 
     public void render(SpriteBatch sb) {
-        sb.draw(enemy, position.x, position.y);
+        sb.draw(enemy, position.x, position.y, enemy.getWidth()/2, enemy.getHeight()/2, enemy.getWidth(), enemy.getHeight(),1f, 1f, enemyBody.getAngle(), 0, 0, enemy.getWidth(), enemy.getHeight(), false, false);
     }
 
     public void dispose() {

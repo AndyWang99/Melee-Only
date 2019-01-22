@@ -40,6 +40,8 @@ public class Player {
     private FixtureDef playerFixtureDef;
     private Fixture playerFixture;
 
+    private Box2dSteerable steerable;
+
     public Player(World world) {
         player = new Texture("player.png");
         position = new Vector2(0, 0);
@@ -61,10 +63,13 @@ public class Player {
         playerCircle.setRadius((player.getWidth()/2) * PIXELS_TO_METERS);
         playerFixtureDef = new FixtureDef();
         playerFixtureDef.shape = playerCircle;
-        playerFixtureDef.density = 500f;
+        playerFixtureDef.density = 50f;
         playerFixtureDef.friction = 10f;
         playerFixtureDef.restitution = 0f;
         playerFixture = playerBody.createFixture(playerFixtureDef);
+
+        steerable = new Box2dSteerable();
+        steerable.setBody(playerBody);
     }
 
     public Vector2 getPosition() {
@@ -83,6 +88,10 @@ public class Player {
 
     public void setAngle(float angle) {
         playerBody.setTransform(playerBody.getWorldCenter(), angle);
+    }
+
+    public Box2dSteerable getSteerable() {
+        return steerable;
     }
 
     public void attack() {

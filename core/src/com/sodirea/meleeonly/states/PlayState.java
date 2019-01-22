@@ -142,7 +142,7 @@ public class PlayState extends State {
         }
 
         enemies = new ArrayList<Enemy>();
-        enemies.add(new Fox(world, new Vector2(player.getPosition().x+100, player.getPosition().y+100)));
+        enemies.add(new Fox(world, new Vector2(player.getPosition().x+100, player.getPosition().y+100), player.getSteerable()));
 
         Texture knob = new Texture("knob.png");
         Texture padbg = new Texture("padbg.png");
@@ -221,6 +221,11 @@ public class PlayState extends State {
         player.update(dt);
 
         for(Enemy enemy : enemies) {
+            if (enemy.getPosition().dst(player.getPosition()) < enemy.getDetectionRange() && !enemy.isAggro()) { // make enemies aggressive if they come near the player
+                enemy.setAggroSteering();
+            } else if (enemy.getPosition().dst(player.getPosition()) >= enemy.getDetectionRange() && enemy.isAggro()) {
+                enemy.setNormalSteering();
+            }
             enemy.update(dt);
         }
 
