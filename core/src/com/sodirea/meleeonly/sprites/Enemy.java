@@ -18,6 +18,7 @@ public abstract class Enemy {
     private Vector2 velocity;
 
     private int hp;
+    private int maxHp;
     private int damage;
 
     private BodyDef enemyBodyDef;
@@ -46,6 +47,7 @@ public abstract class Enemy {
         enemyFixtureDef.friction = 10f;
         enemyFixtureDef.restitution = 0f;
         enemyFixture = enemyBody.createFixture(enemyFixtureDef);
+        enemyBody.setUserData(this);
 
         isAggro = false;
     }
@@ -66,6 +68,18 @@ public abstract class Enemy {
         return hp;
     }
 
+    public void setHp(int hp) {
+        this.hp = hp;
+    }
+
+    public int getMaxHp() {
+        return maxHp;
+    }
+
+    public void setMaxHp(int hp) {
+        maxHp = hp;
+    }
+
     public void takeDamage(int damageTaken) {
         hp -= damageTaken;
     }
@@ -76,6 +90,10 @@ public abstract class Enemy {
 
     public Body getBody() {
         return enemyBody;
+    }
+
+    public void setBody(Body body) {
+        this.enemyBody = body;
     }
 
     public abstract void setNormalSteering();

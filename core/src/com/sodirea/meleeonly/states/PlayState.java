@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
@@ -45,7 +46,8 @@ public class PlayState extends State {
     public static final Vector2 UNIT_DIM = new Vector2(150, 150);         // each unit is 50px x 50px, so our world is composed of 100 x 100 units
     public static final int MIN_NUM_TILES = 300;
     public static final int MAX_NUM_TILES = 500;
-    public static final float PIXELS_TO_METERS = 0.01f;
+    public static final float PIXELS_TO_METERS = 0.01f; // default is 0.01f
+    public static final boolean DEBUGGING = false; // don't forget to set PIXELS_TO_METERS to 1f for this to be useful (i.e. see real-sized physics bodies)
     public static final float TIME_STEP = 1 / 300f;
 
     private boolean[][] map;                                                  // if true, then that pair of indices is walkable. false means it is a wall
@@ -55,11 +57,14 @@ public class PlayState extends State {
     private Player player;
 
     private ArrayList<Enemy> enemies;
+    private ArrayList<Body> toBeDeletedEnemies;
 
     private Stage stage;
     private Touchpad pad;
     private Button atkBtn;
     private World world;
+
+    private Box2DDebugRenderer debugRenderer;
 
     public PlayState(GameStateManager gsm) {
         super(gsm);
@@ -68,7 +73,27 @@ public class PlayState extends State {
         world.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
-
+                Fixture a = contact.getFixtureA();
+                Fixture b = contact.getFixtureB();
+                // note: this if-statement will later be used to calculate the damage that the player takes when they come in contact with a mob.
+                // by then, weapon class will be implemented, and we can find contact between weapon and enemy.class for this exact purpose
+                Object objectA = a.getBody().getUserData();
+                Object objectB = b.getBody().getUserData();
+                if (objectA instanceof Player && objectB instanceof Enemy || objectA instanceof Enemy && objectB instanceof Player) {
+                    // do damage and activate i-frames
+                    Enemy enemy = null;
+                    if (objectA instanceof Player && objectB instanceof Enemy) {
+                        enemy = (Enemy) objectB;
+                    } else if (objectA instanceof Enemy && objectB instanceof Player) {
+                        enemy = (Enemy) objectA;
+                    }
+                    enemy.takeDamage(player.getDamage());
+                    System.out.println(enemy.getHp() + "/" + enemy.getMaxHp());
+                    if (enemy.getHp() <= 0) {
+                        enemies.remove(enemy);
+                        toBeDeletedEnemies.add(enemy.getBody());
+                    }
+                }
             }
 
             @Override
@@ -143,6 +168,9 @@ public class PlayState extends State {
 
         enemies = new ArrayList<Enemy>();
         enemies.add(new Fox(world, new Vector2(player.getPosition().x+100, player.getPosition().y+100), player.getSteerable()));
+        enemies.add(new Fox(world, new Vector2(player.getPosition().x+100, player.getPosition().y+100), player.getSteerable()));
+        enemies.add(new Fox(world, new Vector2(player.getPosition().x+100, player.getPosition().y+100), player.getSteerable()));
+        toBeDeletedEnemies = new ArrayList<Body>();
 
         Texture knob = new Texture("knob.png");
         Texture padbg = new Texture("padbg.png");
@@ -194,6 +222,8 @@ public class PlayState extends State {
         stage.addActor(atkBtn);
 
         Gdx.input.setInputProcessor(stage);
+
+        debugRenderer = new Box2DDebugRenderer();
     }
 
     @Override
@@ -234,12 +264,21 @@ public class PlayState extends State {
         cam.update();
         stage.act();
         world.step(TIME_STEP, 6, 2);
+        for (Body body : toBeDeletedEnemies)
+        {
+            world.destroyBody(body);
+        }
+
+        toBeDeletedEnemies.clear();
     }
 
     @Override
     public void render(SpriteBatch sb) {
         sb.setProjectionMatrix(cam.combined);
         sb.begin();
+        if (DEBUGGING) {
+            debugRenderer.render(world, cam.combined);
+        }
         sb.draw(catBg, cam.position.x-cam.viewportWidth/2, cam.position.y-cam.viewportHeight/2);
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {

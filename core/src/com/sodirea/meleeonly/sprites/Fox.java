@@ -28,6 +28,9 @@ public class Fox extends Enemy {
     public Fox(World world, Vector2 position, Box2dSteerable playerSteerable) {
         super(world, new Texture("fox.png"), position);
 
+        setMaxHp(50);
+        setHp(getMaxHp());
+
         steeringOutput = new SteeringAcceleration<Vector2>(new Vector2());
 
         steerable = new Box2dSteerable();
